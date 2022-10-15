@@ -1,0 +1,121 @@
+from sys import stdin, stdout
+from collections import defaultdict
+
+class SegmentTree:
+    def __init__(self, data, default=-10**18, func=max): # need to change default if func = min
+        """initialize the segment tree with data"""
+        self._default = default
+        self._func = func
+        self._len = len(data)
+        self._size = _size = 1 << (self._len - 1).bit_length()
+
+        self.data = [default] * (2 * _size)
+        self.data[_size:_size + self._len] = data
+        for i in reversed(range(_size)):
+            self.data[i] = func(self.data[i + i], self.data[i + i + 1])
+
+    def __delitem__(self, idx):
+        self[idx] = self._default
+
+    def __getitem__(self, idx):
+        return self.data[idx + self._size]
+
+    def __setitem__(self, idx, value):
+        idx += self._size
+        self.data[idx] = value
+        idx >>= 1
+        while idx:
+            self.data[idx] = self._func(self.data[2 * idx], self.data[2 * idx + 1])
+            idx >>= 1
+
+    def __len__(self):
+        return self._len
+
+    def query(self, start, stop):
+        """func of data[start, stop)"""
+        start += self._size
+        stop += self._size
+
+        res_left = res_right = self._default
+        while start < stop:
+            if start & 1:
+                res_left = self._func(res_left, self.data[start])
+                start += 1
+            if stop & 1:
+                stop -= 1
+                res_right = self._func(self.data[stop], res_right)
+            start >>= 1
+            stop >>= 1
+
+        return self._func(res_left, res_right)
+
+    def __repr__(self):
+        return "SegmentTree({0})".format(self.data)
+
+
+t = int(stdin.readline())
+
+for _ in range(t):
+    N, E = [int(x) for x in stdin.readline().split()]
+    y_to_flowers = defaultdict(list)
+    x_locations = set()
+    y_locations = set()
+
+    for bar in range(N):
+        x, y, c = [int(z) for z in stdin.readline().split()]
+        y_to_flowers[y].append((x,c))
+        x_locations.add(x)
+        y_locations.add(y)
+
+    x_locations = list(x_locations)
+    x_locations.sort()
+    x_N = len(x_locations)
+    x_locations_to_index = {}
+    for i in range(x_N):
+        x_locations_to_index[x_locations[i]] = i
+
+    right_tree = SegmentTree([0]*x_N)
+    left_tree = SegmentTree([-E]*x_N)
+
+    y_locations = list(y_locations)
+    y_locations.sort(reverse = True)
+
+    for y in y_locations:
+        flowers = y_to_flowers[y]
+        flowers.sort()
+        for i in range(len(flowers)):
+            if i == 0:
+                x, c = flowers[i]
+                index = x_locations_to_index[x]
+                temp = right_tree.query(0,index+1) + c
+                right_tree[index] = temp
+            else:
+                x, c = flowers[i]
+                index = x_locations_to_index[x]
+                previous_index = x_locations_to_index[flowers[i-1][0]]
+                temp = right_tree.query(previous_index,index+1) + c
+                right_tree[index] = temp
+
+            temp1 = right_tree.query(index, x_N) - E
+
+        for i in range(len(flowers)-1,-1,-1):
+            if i == len(flowers)-1:
+                x, c = flowers[i]
+                index = x_locations_to_index[x]
+                temp = left_tree.query(index,x_N) + c
+                left_tree[index] = temp
+            else:
+                x, c = flowers[i]
+                index = x_locations_to_index[x]
+                previous_index = x_locations_to_index[flowers[i+1][0]]
+                temp = left_tree.query(index,previous_index+1) + c
+                left_tree[index] = temp
+
+            temp2 = left_tree.query(0,index+1) - E
+
+        left_tree[x_N-1] = max(left_tree[x_N-1], temp1)
+        right_tree[0] = max(right_tree[0], temp2)
+
+    answer = max(right_tree.query(0,x_N), left_tree.query(0,x_N))
+
+    stdout.write('Case #{}: {}\n'.format(_+1, answer))

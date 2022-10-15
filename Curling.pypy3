@@ -1,0 +1,53 @@
+from sys import stdin, stdout
+
+t = int(stdin.readline())
+
+for _ in range(t):
+    r, R = [int(x) for x in stdin.readline().split()]
+    limit = (R+r)**2
+
+    n = int(stdin.readline())
+    team1 = []
+    for i in range(n):
+        x, y = [int(z) for z in stdin.readline().split()]
+        dist = x**2 + y**2
+        if dist <= limit:
+            team1.append(dist)
+
+    m = int(stdin.readline())
+    team2 = []
+    for i in range(m):
+        x, y = [int(z) for z in stdin.readline().split()]
+        dist = x**2 + y**2
+        if dist <= limit:
+            team2.append(dist)
+
+    if len(team1) == 0 and len(team2) == 0:
+        stdout.write('Case #{}: {} {}\n'.format(_+1, 0, 0))
+
+    elif len(team2) == 0:
+        stdout.write('Case #{}: {} {}\n'.format(_+1, len(team1), 0))
+
+    elif len(team1) == 0:
+        stdout.write('Case #{}: {} {}\n'.format(_+1, 0, len(team2)))
+
+    else:
+        team1.sort()
+        team2.sort()
+        if team1[0] < team2[0]:
+            i = 0
+            while i < len(team1):
+                if team1[i] > team2[0]:
+                    break
+                i += 1
+
+            stdout.write('Case #{}: {} {}\n'.format(_+1, i, 0))
+
+        else:
+            i = 0
+            while i < len(team2):
+                if team2[i] > team1[0]:
+                    break
+                i += 1
+
+            stdout.write('Case #{}: {} {}\n'.format(_+1, 0, i))

@@ -1,0 +1,21 @@
+from sys import stdin, stdout
+
+t = int(stdin.readline())
+
+for _ in range(t):
+    m, n, p = [int(x) for x in stdin.readline().split()]
+    global_max = [-1]*n
+
+    for i in range(m):
+        temp = [int(x) for x in stdin.readline().split()]
+        if i == p-1:
+            himself = temp
+
+        for j in range(n):
+            global_max[j] = max(global_max[j], temp[j])
+
+    answer = 0
+    for j in range(n):
+        answer += global_max[j] - himself[j]
+
+    stdout.write('Case #{}: {}\n'.format(_+1, answer))
